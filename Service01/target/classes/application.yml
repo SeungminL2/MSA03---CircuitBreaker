@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: Service01
+      # 유레카 서버에 등록되는 서비스 명
+
+server:
+  port: 8081
+
+eureka:
+  client:
+    register-with-eureka: true
+      # 유레카 디스커버리 서버의 등록
+    fetch-registry: true
+      # defaultZone의 유레카 서버에서 클라이언트 정보를 가져옴
+  instance:
+    prefer-ip-address: true
+
+
+resilience4j:
+  # 지연 시간
+  timelimiter:
+    configs:
+      default:
+        cancel-running-future: true
+        timeout-duration: 3s
+  # 실패율
+  circuitbreaker:
+    configs:
+      default:
+        failureRateThreshold: 51    # 실패율이 50% 이상이면 Open으로 전환
+        slidingWindowSize: 5    # 최근 요청 3개의 실패율을 계산
+        slidingWindowType: COUNT_BASED    # 시간기반이 아닌 요청 수(slidingWindowSize) 기준으로 실패율 계산
+        minimumNumberOfCalls: 3    # 실패율을 계산하기 위한 최소 호출 횟수 >> 10번 미만의 요청에는 실패율을 계산X
+        waitDurationInOpenState: 10s    # Open일 때, 5초 기다린 후 자동으로 Half-open으로 전환
+#        slowCallDurationThreshold: 2000    # 한 요청이 2초 이상 걸리면 그 요청은 지연된 것으로 간주
+#        slowCallRateThreshold: 50    # 전체 요청 중 50% 이상이 지연되면, Open으로 전환
+        permittedNumberOfCallsInHalfOpenState: 3    # Half-Open일 때, 3개의 요청의 결과에 따라 Open할지 Closed할지 결정
+#        maxWaitDurationInHalfOpenState: 5000    # Half-Open일 때, 요청이 없으면 최대 5초 동안 대기한 후 다시 Open으로 전환
+        register-health-indicator: true
+        automatic-transition-from-open-to-half-open-enabled: true    # Open에서 Half-open으로 자동 전환
+
+management:
+  endpoint:
+    health:
+      showDetails: always
+      circuitbreakers:
+        enabled: true
+    endpoints:
+      web:
+        exposure:
+          include: "*"

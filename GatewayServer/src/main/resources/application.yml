@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: GatewayServer
+  cloud:
+    gateway:
+#      # Gateway가 동적으로 Eureka에 새로 등록된 서비스를 동적으로 감지, 동적으로 라우팅 경로 정의하도록 하는 코드
+#      discovery:
+#        locator:
+#          enabled: true
+#          lower-case-service-id: true
+      routes:
+        # routes(라우트) : 응답을 보낼 목적지 URI, 필터 항목을 식별하기 위한 ID
+        #  |-> http://localhost:8081 (Service01의 포트번호)
+        - id: first-service
+          uri: lb://SERVICE01
+             # Eureka에서 'SERVICE01'을 찾고, 해당 서비스의 인스턴스로 로드 밸런싱하여 라우팅
+             # lb : load balancing
+          predicates:
+          # predicates(조건자) : 요청을 처리하기전 HTTP 요청이 정의된 조건에 부합하는지 검사
+          #  |-> http://localhost:8765/t1로 접근 들어온다면 (8765 : GatewayServer 포트번호)
+            - Path=/tiger/**
+          # filters도 있음
+        - id: second-service
+          uri: lb://SERVICE02
+          predicates:
+            - Path=/lion/**
+
+eureka:
+  instance:
+    non-secure-port: ${server.port}
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+server:
+  port: 8765
